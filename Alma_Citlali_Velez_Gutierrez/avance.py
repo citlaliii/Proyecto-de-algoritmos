@@ -1,1 +1,112 @@
+import pygame
+import sys
+from moviepy.editor import VideoFileClip
+from pygame.locals import *
 
+# Constants
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+
+def main():
+    # Reproducir el video con sonido antes de iniciar el juego
+    play_video()
+
+    # Mostrar el menú y esperar a que el usuario inicie el juego
+    show_menu()
+
+    # Iniciar el juego
+    #Game().loop()
+
+def play_video():
+    pygame.display.set_caption("ChecoGame")
+    # Ruta del archivo de video
+    video_path = r"C:\Users\UnKnown\Documents\Proyecto_juego\f1_intro.mp4"
+
+    # Reproducir el video con sonido
+    video_clip = VideoFileClip(video_path)
+
+    # Redimensionar el video al tamaño deseado y centrarlo en una ventana de 800x600
+    video_clip_resized = video_clip.resize((SCREEN_WIDTH, SCREEN_HEIGHT))
+    video_clip_resized = video_clip_resized.set_position(('center', 'center'))
+
+    # Reproducir el video con sonido
+    video_clip_resized.preview()
+
+def show_menu():
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("Menú")
+    
+    # Cargar imagen de fondo del menú
+    background_image = pygame.image.load(r"C:\Users\UnKnown\Documents\Proyecto_juego\back_menu.jpg").convert()
+    background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))  # Redimensionar la imagen al tamaño de la pantalla
+
+    # Cargar imagen del botón de inicio
+    start_button_image = pygame.image.load(r"C:\Users\UnKnown\Documents\Proyecto_juego\boton.png").convert_alpha()
+    start_button_image = pygame.transform.scale(start_button_image, (200, 100))  # Redimensionar el botón
+
+    clock = pygame.time.Clock()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == MOUSEBUTTONDOWN:
+                # Verificar si el botón de inicio fue presionado
+                if start_button_rect.collidepoint(event.pos):
+                    return  # Salir de la función para iniciar el juego
+
+        # Dibujar la imagen de fondo del menú
+        screen.blit(background_image, (0, 0))
+
+        # Obtener el rectángulo del botón de inicio
+        start_button_rect = start_button_image.get_rect()
+        # Centrar el botón de inicio en la parte inferior de la pantalla
+        start_button_rect.center = (400, 550)
+        # Dibujar el botón de inicio
+        screen.blit(start_button_image, start_button_rect)
+
+        pygame.display.flip()
+        clock.tick(30)
+
+class Background(pygame.sprite.Sprite):
+    def _init(self):  # Corregir la definición del método __init_
+        super(Background, self)._init_()
+
+        self.surf = pygame.image.load(r"C:\Users\UnKnown\Documents\Proyecto_juego\pista.png")
+        background_width = SCREEN_WIDTH  # doble ancho
+        background_height = (background_width / self.surf.get_width()) * self.surf.get_height()
+        self.surf = pygame.transform.scale(self.surf, (background_width, background_height))
+        self.rect = self.surf.get_rect(
+            bottomleft=(0, SCREEN_HEIGHT)
+        )
+        # Usamos 2 surface para hacer un buen loop del fondo
+        # Se mueven juntos y cuando uno desaparece de pantalla se mueve
+        # hasta abajo, y así se van repitiendo
+        self.surf2 = self.surf
+        self.rect2 = self.surf2.get_rect(
+            bottomleft=self.rect.topleft
+        )
+        self.ypos = 0
+        self.ypos2 = background_height - SCREEN_HEIGHT
+
+    def update(self, delta_time):
+        self.ypos += .05 * delta_time
+        self.ypos2 += .05 * delta_time
+        self.rect.y = int(self.ypos)
+        self.rect2.y = int(self.ypos2)
+        if self.rect.y > SCREEN_HEIGHT:
+            self.ypos = self.rect2.y - self.surf2.get_height()
+            self.rect.y = self.ypos
+        if self.rect2.y > SCREEN_HEIGHT:
+            self.ypos2 = self.rect.y - self.surf.get_height()
+            self.rect2.y = self.ypos2
+
+    def render(self, dest):
+        dest.blit(self.surf, self.rect)
+        dest.blit(self.surf2, self.rect2)
+
+
+
+main()
